@@ -54,7 +54,16 @@ class EwayRebillTest < Test::Unit::TestCase
   end
   
   def test_create_customer
-    response = @gateway.create_customer(@customer_params)
+    credit_card ||= ActiveMerchant::Billing::CreditCard.new(
+      :first_name         => 'martin',
+      :last_name          => 'stannard',
+      :type               => 'visa',
+      :number             => '4444333322221111',
+      :verification_value => '123',
+      :month              => 12,
+      :year               => 2010
+    )
+    response = @gateway.create_customer(credit_card, @customer_params)
     assert_false response.error?
     assert_not_nil response.customer_id
   end

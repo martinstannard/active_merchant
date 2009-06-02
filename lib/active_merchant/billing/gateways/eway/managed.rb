@@ -14,7 +14,7 @@ module ActiveMerchant #:nodoc:
           EwayManagedHeader.new(eway_customer_id, username, password)
         end
       end
- 
+
       class EwayManagedHeader < SOAP::Header::SimpleHandler
         def initialize(eway_customer_id, username, password)
           super(XSD::QName.new('https://www.eway.com.au/gateway/managedpayment', 'eWAYHeader'))
@@ -44,7 +44,7 @@ module ActiveMerchant #:nodoc:
         end
 
         def save(options = {})
-           if id
+          if id
             update(options)
           else
             create(options)
@@ -64,8 +64,8 @@ module ActiveMerchant #:nodoc:
 
         def create(options = {})
           self.credit_card.require_verification_value = false
-          raise ActiveRecord::RecordInvalid.new(self) unless self.valid?
-          raise ActiveRecord::RecordInvalid.new(self.credit_card) unless self.credit_card.valid?
+          raise StandardError.new(self) unless self.valid?
+          raise StandardError.new(self.credit_card) unless self.credit_card.valid?
           self.credit_card.year = self.credit_card.year.to_s[2..3]
 
           options = self.options.merge(options)
@@ -75,10 +75,10 @@ module ActiveMerchant #:nodoc:
 
         def update(options = {})
           self.credit_card.require_verification_value = false
-          raise ActiveRecord::RecordInvalid.new(self) unless self.valid?
-          raise ActiveRecord::RecordInvalid.new(self.credit_card) unless self.credit_card.valid?
+          raise StandardError.new(self) unless self.valid?
+          raise StandardError.new(self.credit_card) unless self.credit_card.valid?
           self.credit_card.year = self.credit_card.year.to_s[2..3]
-          
+
           options = self.options.merge(options)
           res = driver(options[:login], options[:username], options[:password]).UpdateCustomer(prepared_attributes).updateCustomerResult
           return res == "true"
@@ -87,9 +87,9 @@ module ActiveMerchant #:nodoc:
         def self.query(id, options = {})
           proxy = ProxyBase.new
           response = proxy.driver(options[:login], options[:username], options[:password]).QueryCustomer(:managedCustomerID => id).queryCustomerResult
-           
+
           customer = Customer.new({}, options)
-          
+
           customer.fields.each do |field|
             case(field)
             when :id
@@ -117,7 +117,7 @@ module ActiveMerchant #:nodoc:
 
           customer
         end
-        
+
         def validate
           errors.add :first_name, 'is required' if self.first_name.blank?
           errors.add :last_name, 'is required' if self.last_name.blank?
@@ -138,18 +138,18 @@ module ActiveMerchant #:nodoc:
             else
               camel_key = ProxyBase.camelize(key)
             end
-            
+
             tmp[camel_key.to_s] = attributes[key].to_s
           end
           tmp["Title"] = "Mr."
           tmp["Country"] = "au"
-          
+
           # Now go through the Credit Card object
           tmp['CCNumber'] = self.credit_card.number
           tmp['CCNameOnCard'] = self.credit_card.first_name + " " + self.credit_card.last_name
           tmp['CCExpiryMonth'] = self.credit_card.month
           tmp['CCExpiryYear'] = self.credit_card.year
-          
+
           tmp
         end
       end
@@ -160,7 +160,7 @@ module ActiveMerchant #:nodoc:
         def initialize(soap_obj)
           super
           self.customer_id = soap_obj.rebillCustomerID == "0" ? nil : soap_obj.rebillCustomerID
-          
+
           # Try to fill the customer object
           self.customer = Customer.new
           self.customer.id = self.customer_id
@@ -197,7 +197,7 @@ module ActiveMerchant #:nodoc:
         def query(options = {})
           Payment.query(self.customer_id)
         end
-      
+
         def process(options = {})
           begin
             res = driver(options[:login], options[:username], options[:password]).ProcessPayment(prepared_attributes).ewayResponse

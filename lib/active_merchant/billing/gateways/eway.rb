@@ -40,7 +40,7 @@ module ActiveMerchant #:nodoc:
     #
     # To finish setting up, create the active_merchant object you will be using, with the eWay gateway. If you have a
     # functional eWay account, replace :login with your account info. 
-  # include the :engine option to select rebill or managed payments
+    # include the :engine option to select rebill or managed payments
     #
     #   gateway = ActiveMerchant::Billing::Base.gateway(:eway).new(:login => '87654321')
     #
@@ -69,10 +69,10 @@ module ActiveMerchant #:nodoc:
     class EwayGateway < Gateway
       TEST_URL     = 'https://www.eway.com.au/gateway/xmltest/testpage.asp'
       LIVE_URL     = 'https://www.eway.com.au/gateway/xmlpayment.asp'
-      
+
       TEST_CVN_URL = 'https://www.eway.com.au/gateway_cvn/xmltest/testpage.asp'
       LIVE_CVN_URL = 'https://www.eway.com.au/gateway_cvn/xmlpayment.asp'
-      
+
       MESSAGES = {
         "00" => "Transaction Approved",
         "01" => "Refer to Issuer",
@@ -138,13 +138,13 @@ module ActiveMerchant #:nodoc:
 
       include ActiveMerchant::Billing::EwayRebill 
       include ActiveMerchant::Billing::EwayManaged
-      
+
       self.money_format = :cents
       self.supported_countries = ['AU']
       self.supported_cardtypes = [:visa, :master]
       self.homepage_url = 'http://www.eway.com.au/'
       self.display_name = 'eWAY'
-      
+
       def initialize(options = {})
         requires!(options, :login)
         @options = options
@@ -162,56 +162,50 @@ module ActiveMerchant #:nodoc:
         add_invoice_data(post, options)
         # The request fails if all of the fields aren't present
         add_optional_data(post)
-    
+
         commit(money, post)
       end
-  
-      def new_customer(options = {})
+
+      def new_customer(attributes = {}, options = {})
         options = @options.merge(options)
-        
-        if options[:engine] == :managed
-          c = EwayManaged::Customer.new({}, options)
-        end
+
+        c = EwayManaged::Customer.new(attributes, options)
       end
 
       def create_customer(credit_card, customer, options = {})
         options = @options.merge(options)
 
-        if options[:engine] == :managed
-          c = EwayManaged::Customer.new(customer, options)
-          c.credit_card = credit_card
-        end
-       
-       c.create(options)
-       return c
+        c = EwayManaged::Customer.new(customer, options)
+        c.credit_card = credit_card
+
+        c.create(options)
+        return c
       end
 
       def update_customer(customer_id, credit_card, customer, options = {})
         options = @options.merge(options)
         customer[:id] = customer_id
 
-        if options[:engine] == :managed
-          c = EwayManaged::Customer.new(customer)
-          c.credit_card = credit_card
-        end
+        c = EwayManaged::Customer.new(customer)
+        c.credit_card = credit_card
 
         c.update(options)
       end
 
-      def query_customer(customer_id)
-        if options[:engine] == :managed
-          EwayManaged::Customer.query(customer_id, options)
-        end
+      def query_customer(customer_id, options = {})
+        options = @options.merge(options)
+        EwayManaged::Customer.query(customer_id, options)
       end
 
       def query_payment(customer_id)
+        options = @options.merge(options)
         EwayManaged::Payment.query(customer_id, options)
       end
 
       def process_payment(money, customer_id, options)
         options = @options.merge(options)
         requires!(options, :order_id)
-        
+
         p = EwayManaged::Payment.new
         p.customer_id = customer_id
         p.amount = amount((money * 100).to_i)
@@ -229,7 +223,7 @@ module ActiveMerchant #:nodoc:
         post[:CustomerFirstName] = creditcard.first_name
         post[:CustomerLastName]  = creditcard.last_name
         post[:CardHoldersName] = creditcard.name
-              
+
         post[:CVN] = creditcard.verification_value if creditcard.verification_value?
       end 
 
@@ -245,7 +239,7 @@ module ActiveMerchant #:nodoc:
       def add_customer_data(post, options)
         post[:CustomerEmail] = options[:email]
       end
-      
+
       def add_invoice_data(post, options)
         post[:CustomerInvoiceRef] = options[:order_id]
         post[:CustomerInvoiceDescription] = options[:description]
@@ -264,16 +258,16 @@ module ActiveMerchant #:nodoc:
         response = parse( ssl_post(gateway_url(parameters[:CVN], test?), post_data(parameters)) )
 
         Response.new(success?(response), message_from(response[:ewaytrxnerror]), response,
-          :authorization => response[:ewayauthcode],
-          :test => /\(Test( CVN)? Gateway\)/ === response[:ewaytrxnerror]
-        )      
+                     :authorization => response[:ewayauthcode],
+                     :test => /\(Test( CVN)? Gateway\)/ === response[:ewaytrxnerror]
+                    )      
       end
-      
+
       def success?(response)
         response[:ewaytrxnstatus] == "True"
       end
 
-                                    
+
       # Parse eway response xml into a convinient hash
       def parse(xml)
         #  "<?xml version=\"1.0\"?>".
@@ -302,16 +296,16 @@ module ActiveMerchant #:nodoc:
 
       def post_data(parameters = {})
         parameters[:CustomerID] = @options[:login]
-        
+
         xml   = REXML::Document.new
         root  = xml.add_element("ewaygateway")
-        
+
         parameters.each do |key, value|
           root.add_element("eway#{key}").text = value
         end    
         xml.to_s
       end
-    
+
       def message_from(message)
         return '' if message.blank?
         MESSAGES[message[0,2]] || message
@@ -327,7 +321,7 @@ module ActiveMerchant #:nodoc:
         else field
         end        
       end
-      
+
       def gateway_url(cvn, test)
         if cvn
           test ? TEST_CVN_URL : LIVE_CVN_URL
