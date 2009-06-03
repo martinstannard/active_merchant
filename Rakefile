@@ -13,7 +13,7 @@ PKG_NAME = "activemerchant"
 PKG_FILE_NAME = "#{PKG_NAME}-#{PKG_VERSION}"
 
 PKG_FILES = FileList[
-    "lib/**/*", "test/**/*", "script/**/*", "[a-zA-Z]*"
+  "lib/**/*", "test/**/*", "script/**/*", "[a-zA-Z]*"
 ].exclude(/\.svn$/)
 
 
@@ -57,13 +57,13 @@ task :lines do
   Dir.foreach("lib") { |file_name| 
     next unless file_name =~ /.*rb/
 
-    f = File.open("lib/" + file_name)
+      f = File.open("lib/" + file_name)
 
     while line = f.gets
       lines += 1
       next if line =~ /^\s*$/
-      next if line =~ /^\s*#/
-      codelines += 1
+        next if line =~ /^\s*#/
+        codelines += 1
     end
   }
   puts "Lines #{lines}, LOC #{codelines}"
@@ -85,10 +85,10 @@ spec = Gem::Specification.new do |s|
   s.author = "Tobias Luetke"
   s.email = "tobi@leetsoft.com"
   s.homepage = "http://activemerchant.org/"
-  
+
   s.add_dependency('activesupport', '>= 1.4.1')
   s.add_dependency('builder', '>= 2.0.0')
-  
+
   s.signing_key = ENV['GEM_PRIVATE_KEY']
   s.cert_chain  = ['gem-public_cert.pem']
 end
@@ -111,9 +111,9 @@ task :release => [ :publish, :upload_rdoc ]
 desc "Publish the release files to RubyForge."
 task :publish => [ :package ] do
   require 'rubyforge'
-  
+
   packages = %w( gem tgz zip ).collect{ |ext| "pkg/#{PKG_NAME}-#{PKG_VERSION}.#{ext}" }
-  
+
   rubyforge = RubyForge.new
   rubyforge.configure
   rubyforge.login
@@ -135,20 +135,20 @@ namespace :gateways do
     support = GatewaySupport.new
     support.to_s
   end
-  
+
   namespace :print do
     desc 'Print the currently supported gateways in RDoc format'
     task :rdoc do
       support = GatewaySupport.new
       support.to_rdoc
     end
-  
+
     desc 'Print the currently supported gateways in Textile format'
     task :textile do
       support = GatewaySupport.new
       support.to_textile
     end
-    
+
     desc 'Print the gateway functionality supported by each gateway'
     task :features do
       support = GatewaySupport.new
@@ -156,6 +156,19 @@ namespace :gateways do
     end
   end
 end
-  
-  
-  
+
+begin
+  require 'jeweler'
+  Jeweler::Tasks.new do |gemspec|
+    gemspec.name = PKG_NAME
+    gemspec.version = PKG_VERSION
+    gemspec.summary = "Framework and tools for dealing with credit card transactions."
+    gemspec.email = "mstannard@gmail.com"
+    gemspec.homepage = "http://github.com/martinstannard/active_merchant"
+    gemspec.description = "TODO"
+    gemspec.authors = ["Martin Stannard"]
+  end
+rescue LoadError
+  puts "Jeweler not available. Install it with: sudo gem install technicalpickles-jeweler -s http://gems.github.com"
+end
+
