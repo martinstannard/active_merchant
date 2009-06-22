@@ -81,7 +81,7 @@ module ActiveMerchant #:nodoc:
 
           options = self.options.merge(options)
           res = driver(options[:login], options[:username], options[:password]).UpdateCustomer(prepared_attributes).updateCustomerResult
-          return res == "true"
+          res
         end
 
         def self.query(id, options = {})

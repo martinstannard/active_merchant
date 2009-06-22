@@ -5,32 +5,6 @@ class EwayManagedTest < Test::Unit::TestCase
     Base.gateway_mode = :test
     @gateway = EwayGateway.new(fixtures(:eway_managed))
 
-    @credit_card_success = credit_card('4444333322221111')
-
-    @credit_card_fail = credit_card('1234567812345678',
-                                    :month => Time.now.month,
-                                    :year => Time.now.year
-                                   )
-
-    @recurring_params = {
-      :order_id => '1230123',
-      :email => 'bob@testbob.com',
-      :first_name => 'Bob',
-      :last_name => 'Stewart',
-
-      :customer => {} ,
-      :billing_address => { :address1 => '47 Bobway',
-        :city => 'Bobville',
-        :state => 'WA',
-        :country => 'AU',
-        :zip => '2000'
-    } ,
-      :description => 'Ongoing Purchase',
-      :starting_at => DateTime.now + 1.day,
-      :ending_at => DateTime.new + 1.day + 1.year,
-      :periodicity => :weekly
-    }
-
     @customer_params = {
       :order_id => '1230123',
       :email => 'bob@testbob.com',
@@ -61,22 +35,43 @@ class EwayManagedTest < Test::Unit::TestCase
       :month              => 12,
       :year               => 2010
     }
+
+    @credit_card_fail = {
+      :first_name         => 'martin',
+      :last_name          => 'stannard',
+      :type               => 'visa',
+      :number             => '1111222233334444',
+      :verification_value => '123',
+      :month              => 12,
+      :year               => 2010
+    }
   end
 
   def test_create_customer
-    credit_card ||= ActiveMerchant::Billing::CreditCard.new(@credit_card_params)
+    credit_card = ActiveMerchant::Billing::CreditCard.new(@credit_card_params)
     customer = @gateway.create_customer(credit_card, @customer_params)
     assert_false customer.error?
     assert_not_nil customer.id
   end
 
-  def test_invalid_create_customer
-    credit_card ||= ActiveMerchant::Billing::CreditCard.new(@credit_card_params)
-    params = @customer_params.dup
-    params[:first_name] = ''
-    assert_raises StandardError do
-      @gateway.create_customer(credit_card, params)
+  def test_invalid_create_customer_cc
+    credit_card = ActiveMerchant::Billing::CreditCard.new(@credit_card_fail)
+    assert_raise(StandardError) do
+      @gateway.create_customer(credit_card, @customer_params)
     end
+    assert credit_card.errors
+    assert credit_card.errors.size, 1
+  end
+
+  def test_invalid_create_customer
+    credit_card = ActiveMerchant::Billing::CreditCard.new(@credit_card_params)
+    customer = nil
+    assert_raise(StandardError) do
+      customer = @gateway.create_customer(credit_card, @customer_params.merge(:first_name => nil))
+    end
+    assert customer.errors
+    assert customer.errors.size, 1
+    puts customer.errors.inspect
   end
 
   def test_query_customer
@@ -105,20 +100,15 @@ class EwayManagedTest < Test::Unit::TestCase
   def test_update_customer
     credit_card = ActiveMerchant::Billing::CreditCard.new(@credit_card_params)
     response =  @gateway.update_customer('9876543211000', credit_card, @customer_params)
-
     assert response
   end
 
   def test_invalid_update_customer
-    params = @customer_params.dup
-    params[:first_name] = ''
     credit_card = ActiveMerchant::Billing::CreditCard.new(@credit_card_params)
     customer = @gateway.create_customer(credit_card, @customer_params)
-    params = @customer_params.dup
-    credit_card = ActiveMerchant::Billing::CreditCard.new(@credit_card_params)
-    assert_raises SOAP::FaultError do
-      @gateway.update_customer(customer.id, credit_card, params)
-    end
+    credit_card = ActiveMerchant::Billing::CreditCard.new(@credit_card_fail)
+    res = @gateway.update_customer('9876543211000', credit_card, @customer_params)
+    assert_false res
   end
 
   def test_delete_customer

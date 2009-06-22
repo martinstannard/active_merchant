@@ -165,7 +165,7 @@ begin
     gemspec.summary = "Framework and tools for dealing with credit card transactions."
     gemspec.email = "mstannard@gmail.com"
     gemspec.homepage = "http://github.com/martinstannard/active_merchant"
-    gemspec.description = "TODO"
+    gemspec.description = "fork of activemerchant"
     gemspec.authors = ["Martin Stannard"]
   end
 rescue LoadError

@@ -208,7 +208,7 @@ module ActiveMerchant #:nodoc:
 
         p = EwayManaged::Payment.new
         p.customer_id = customer_id
-        p.amount = amount((money * 100).to_i)
+        p.amount = amount(money.to_i)
         p.invoice_reference = options[:order_id]
         p.invoice_description = options[:description]
 
