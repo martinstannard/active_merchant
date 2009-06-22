@@ -64,8 +64,8 @@ module ActiveMerchant #:nodoc:
 
         def create(options = {})
           self.credit_card.require_verification_value = false
-          raise StandardError.new(self) unless self.valid?
-          raise StandardError.new(self.credit_card) unless self.credit_card.valid?
+          raise ::ActiveRecord::RecordInvalid.new(self) unless self.valid?
+          raise ::ActiveRecord::RecordInvalid.new(self.credit_card) unless self.credit_card.valid?
           self.credit_card.year = self.credit_card.year.to_s[2..3]
 
           options = self.options.merge(options)
@@ -75,8 +75,8 @@ module ActiveMerchant #:nodoc:
 
         def update(options = {})
           self.credit_card.require_verification_value = false
-          raise StandardError.new(self) unless self.valid?
-          raise StandardError.new(self.credit_card) unless self.credit_card.valid?
+          return false unless self.valid?
+          return false unless self.credit_card.valid?
           self.credit_card.year = self.credit_card.year.to_s[2..3]
 
           options = self.options.merge(options)

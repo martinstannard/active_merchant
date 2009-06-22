@@ -169,14 +169,18 @@ module ActiveMerchant #:nodoc:
       def new_customer(attributes = {}, options = {})
         options = @options.merge(options)
 
-        c = EwayManaged::Customer.new(attributes, options)
+        if options[:engine] == :managed
+          c = EwayManaged::Customer.new(attributes, options)
+        end
       end
 
       def create_customer(credit_card, customer, options = {})
         options = @options.merge(options)
 
-        c = EwayManaged::Customer.new(customer, options)
-        c.credit_card = credit_card
+        if options[:engine] == :managed
+          c = EwayManaged::Customer.new(customer.attributes, options)
+          c.credit_card = credit_card
+        end
 
         c.create(options)
         return c
@@ -186,19 +190,22 @@ module ActiveMerchant #:nodoc:
         options = @options.merge(options)
         customer[:id] = customer_id
 
-        c = EwayManaged::Customer.new(customer)
-        c.credit_card = credit_card
+        if options[:engine] == :managed
+          c = EwayManaged::Customer.new(customer.attributes)
+          c.credit_card = credit_card
+        end
 
         c.update(options)
       end
 
       def query_customer(customer_id, options = {})
         options = @options.merge(options)
-        EwayManaged::Customer.query(customer_id, options)
+        if options[:engine] == :managed
+          EwayManaged::Customer.query(customer_id, options)
+        end
       end
 
       def query_payment(customer_id)
-        options = @options.merge(options)
         EwayManaged::Payment.query(customer_id, options)
       end
 
