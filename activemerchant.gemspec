@@ -7,7 +7,7 @@ Gem::Specification.new do |s|
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Martin Stannard"]
   s.date = %q{2009-06-03}
-  s.description = %q{TODO}
+  s.description = %q{activemerchant gem}
   s.email = %q{mstannard@gmail.com}
   s.extra_rdoc_files = [
     "README"
